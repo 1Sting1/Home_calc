@@ -1,0 +1,33 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5000"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5433/construction_calc
+      - NODE_ENV=development
+      - SESSION_SECRET=your_secret_key_here
+    volumes:
+      - .:/app:z           # Добавьте :z для SELinux
+      - /app/node_modules  # Для анонимного тома :z не нужен
+    command: npm run dev
+
+  db:
+    image: postgres:14
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=construction_calc
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker-init:/docker-entrypoint-initdb.d:z  # Добавьте :z для SELinux
+
+volumes:
+  postgres_data:
