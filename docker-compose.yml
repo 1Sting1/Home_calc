@@ -21,6 +21,7 @@ services:
       - "traefik.http.routers.housecraft.entrypoints=websecure"
       - "traefik.http.routers.housecraft.tls.certresolver=myresolver"
       - "traefik.http.routers.housecraft.priority=10"
+      - "traefik.http.services.housecraft.loadbalancer.server.port=3000"
     networks:
       - traefik_network
     expose:
@@ -40,6 +41,7 @@ services:
       - "traefik.http.routers.housecraft.entrypoints=websecure"
       - "traefik.http.routers.housecraft.tls.certresolver=myresolver"
       - "traefik.http.routers.housecraft.priority=10"
+      - "traefik.http.services.housecraft.loadbalancer.server.port=8321"
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/houseapp
       - SECRET_KEY=your-secret-key-here
