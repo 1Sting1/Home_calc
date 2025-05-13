@@ -3,8 +3,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.frontend
-    ports:
-      - "3000:3000"
     volumes:
       - ./client:/app/client
       - ./shared:/app/shared
@@ -16,7 +14,7 @@ services:
       - backend
     environment:
       - NODE_ENV=development
-      - VITE_API_URL=http://localhost:8321
+      - VITE_API_URL=https://api.housecraft.snaart.com
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.housecraft.rule=Host(`housecraft.snaart.com`)"
@@ -32,20 +30,22 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    ports:
-      - "8321:8321"
     volumes:
       - ./backend:/app
     depends_on:
       - db
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.housecraft.rule=Host(`api.housecraft.snaart.com`)"
+      - "traefik.http.routers.housecraft.entrypoints=websecure"
+      - "traefik.http.routers.housecraft.tls.certresolver=myresolver"
+      - "traefik.http.routers.housecraft.priority=10"
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5438/houseapp
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/houseapp
       - SECRET_KEY=your-secret-key-here
 
   db:
     image: postgres:14
-    ports:
-      - "5438:5432"
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
