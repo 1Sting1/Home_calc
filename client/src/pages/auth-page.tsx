@@ -1,110 +1,117 @@
+import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
-import { useLocation, Link } from "wouter";
-import { useAuth } from "@/hooks/use-auth";
-import { z } from "zod";
+import { useLocation } from "wouter";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Button } from "@/components/ui/button";
+import { z } from "zod";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
-// Schemas for form validation
 const loginSchema = z.object({
-  email: z.string().email("Введите корректный email адрес"),
-  password: z.string().min(6, "Пароль должен быть не менее 6 символов"),
+  username: z.string().min(1, "Username is required"),
+  password: z.string().min(1, "Password is required"),
 });
 
 const registerSchema = z.object({
-  name: z.string().min(2, "Имя должно быть не менее 2 символов"),
-  lastname: z.string().min(2, "Фамилия должна быть не менее 2 символов"),
-  email: z.string().email("Введите корректный email адрес"),
-  password: z.string().min(6, "Пароль должен быть не менее 6 символов"),
+  name: z.string().min(1, "Name is required"),
+  lastname: z.string().min(1, "Last name is required"),
+  username: z.string().min(1, "Username is required"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
-type LoginFormValues = z.infer<typeof loginSchema>;
-type RegisterFormValues = z.infer<typeof registerSchema>;
+type LoginValues = z.infer<typeof loginSchema>;
+type RegisterValues = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
-  const [location, navigate] = useLocation();
+  const { t } = useTranslation();
+  const [location] = useLocation();
+  const [, navigate] = useLocation();
+  const [activeTab, setActiveTab] = useState<"login" | "register">("login");
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const { user, loginMutation, registerMutation } = useAuth();
-  const searchParams = new URLSearchParams(location.split("?")[1]);
-  const defaultTab = searchParams.get("tab") === "register" ? "register" : "login";
-  const [activeTab, setActiveTab] = useState(defaultTab);
-  
-  // Redirect to home if already logged in
+
+  // Установка активной вкладки на основе URL-параметра
   useEffect(() => {
-    if (user) {
-      navigate("/");
+    const url = new URL(window.location.href);
+    const tabParam = url.searchParams.get("tab");
+    if (tabParam === "login" || tabParam === "register") {
+      setActiveTab(tabParam);
     }
-  }, [user, navigate]);
-  
-  // Login form setup
-  const loginForm = useForm<LoginFormValues>({
+  }, [location]);
+
+  const loginForm = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
+    defaultValues: { username: "", password: "" },
   });
-  
-  // Register form setup
-  const registerForm = useForm<RegisterFormValues>({
+
+  const registerForm = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
-    defaultValues: {
-      name: "",
-      lastname: "",
-      email: "",
-      password: "",
-    },
+    defaultValues: { name: "", lastname: "", username: "", password: "" },
   });
-  
-  // Handle login form submission
-  const onLoginSubmit = (data: LoginFormValues) => {
-    loginMutation.mutate(data);
-  };
-  
-  // Handle register form submission
-  const onRegisterSubmit = (data: RegisterFormValues) => {
-    registerMutation.mutate(data);
+
+  const onLoginSubmit = (values: LoginValues) => {
+    loginMutation.mutate(values);
   };
 
+  const onRegisterSubmit = (values: RegisterValues) => {
+    registerMutation.mutate({
+      username: values.username,
+      password: values.password,
+      name: values.name,
+      lastname: values.lastname
+    });
+  };
+
+  // Redirect if user is already logged in
+  useEffect(() => {
+    if (user) {
+      navigate("/profile", { replace: true });
+    }
+  }, [user, navigate]);
+
+  if (user) {
+    return null;
+  }
+
   return (
-    <div className="min-h-screen grid md:grid-cols-2 bg-gray-50">
-      {/* Left panel - Forms */}
-      <div className="flex items-center justify-center p-6">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6">
-            <div className="mb-6">
-              <Link href="/" className="text-primary font-bold text-2xl block text-center mb-4">
-                <span className="text-primary">Дом</span>
-                <span className="text-secondary">Расчет</span>
-              </Link>
-              <h1 className="text-2xl font-bold text-center">
-                {activeTab === "login" ? "Вход в аккаунт" : "Регистрация"}
-              </h1>
-            </div>
-            
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+    <div className="flex flex-col md:flex-row gap-8 max-w-6xl mx-auto items-stretch">
+      <div className="w-full md:w-1/2">
+        <Card className="h-full">
+          <CardHeader>
+            <CardTitle>{t("auth.title")}</CardTitle>
+            <CardDescription>{t("auth.description")}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "login" | "register")}>
               <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="login">Войти</TabsTrigger>
-                <TabsTrigger value="register">Регистрация</TabsTrigger>
+                <TabsTrigger value="login">{t("auth.login.title")}</TabsTrigger>
+                <TabsTrigger value="register">{t("auth.register.title")}</TabsTrigger>
               </TabsList>
               
               <TabsContent value="login">
+                {loginMutation.error && (
+                  <Alert variant="destructive" className="mb-4">
+                    <AlertDescription>
+                      {t("auth.login.error")}
+                    </AlertDescription>
+                  </Alert>
+                )}
+                
                 <Form {...loginForm}>
                   <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
                     <FormField
                       control={loginForm.control}
-                      name="email"
+                      name="username"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Почта</FormLabel>
+                          <FormLabel>{t("auth.fields.username")}</FormLabel>
                           <FormControl>
-                            <Input placeholder="mail@example.com" {...field} />
+                            <Input {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -116,48 +123,55 @@ export default function AuthPage() {
                       name="password"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Пароль</FormLabel>
+                          <FormLabel>{t("auth.fields.password")}</FormLabel>
                           <FormControl>
-                            <Input type="password" placeholder="******" {...field} />
+                            <Input type="password" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                     
-                    {loginMutation.isError && (
-                      <Alert variant="destructive">
-                        <AlertDescription>
-                          Пароль или Логин не верен
-                        </AlertDescription>
-                      </Alert>
-                    )}
-                    
-                    <Button
-                      type="submit"
-                      className="w-full"
-                      disabled={loginMutation.isPending}
-                    >
-                      {loginMutation.isPending ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Входим...
-                        </>
-                      ) : (
-                        "Войти"
-                      )}
+                    <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
+                      {loginMutation.isPending ? t("auth.login.processing") : t("auth.login.submit")}
                     </Button>
                     
-                    <div className="text-center mt-4">
-                      <Link href="#forgot-password" className="text-primary text-sm hover:underline">
-                        Забыли пароль?
-                      </Link>
-                    </div>
+                    <Button 
+                      type="button" 
+                      variant="link"
+                      className="w-full mt-2 text-center text-sm" 
+                      onClick={() => setShowForgotPassword(!showForgotPassword)}
+                    >
+                      {t("auth.login.forgotPassword")}
+                    </Button>
+                    
+                    {showForgotPassword && (
+                      <div className="mt-4 p-4 border-t border-gray-200">
+                        <h3 className="text-lg font-medium mb-3">{t("auth.forgotPassword.title")}</h3>
+                        <div className="space-y-4">
+                          <FormItem>
+                            <FormLabel>{t("auth.fields.username")}</FormLabel>
+                            <Input type="email" />
+                          </FormItem>
+                          <Button className="w-full bg-gray-800 hover:bg-gray-900">
+                            {t("auth.forgotPassword.submit")}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </form>
                 </Form>
               </TabsContent>
               
               <TabsContent value="register">
+                {registerMutation.error && (
+                  <Alert variant="destructive" className="mb-4">
+                    <AlertDescription>
+                      {t("auth.register.error")}
+                    </AlertDescription>
+                  </Alert>
+                )}
+                
                 <Form {...registerForm}>
                   <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
                     <FormField
@@ -165,9 +179,9 @@ export default function AuthPage() {
                       name="name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Имя</FormLabel>
+                          <FormLabel>{t("auth.fields.name")}</FormLabel>
                           <FormControl>
-                            <Input placeholder="Иван" {...field} />
+                            <Input {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -179,9 +193,9 @@ export default function AuthPage() {
                       name="lastname"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Фамилия</FormLabel>
+                          <FormLabel>{t("auth.fields.lastname")}</FormLabel>
                           <FormControl>
-                            <Input placeholder="Иванов" {...field} />
+                            <Input {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -190,12 +204,12 @@ export default function AuthPage() {
                     
                     <FormField
                       control={registerForm.control}
-                      name="email"
+                      name="username"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Почта</FormLabel>
+                          <FormLabel>{t("auth.fields.username")}</FormLabel>
                           <FormControl>
-                            <Input placeholder="mail@example.com" {...field} />
+                            <Input {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -207,36 +221,17 @@ export default function AuthPage() {
                       name="password"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Пароль</FormLabel>
+                          <FormLabel>{t("auth.fields.password")}</FormLabel>
                           <FormControl>
-                            <Input type="password" placeholder="******" {...field} />
+                            <Input type="password" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                     
-                    {registerMutation.isError && (
-                      <Alert variant="destructive">
-                        <AlertDescription>
-                          Не удалось зарегистрироваться. Возможно, такой пользователь уже существует.
-                        </AlertDescription>
-                      </Alert>
-                    )}
-                    
-                    <Button
-                      type="submit"
-                      className="w-full"
-                      disabled={registerMutation.isPending}
-                    >
-                      {registerMutation.isPending ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Регистрация...
-                        </>
-                      ) : (
-                        "Зарегистрироваться"
-                      )}
+                    <Button type="submit" className="w-full" disabled={registerMutation.isPending}>
+                      {registerMutation.isPending ? t("auth.register.processing") : t("auth.register.submit")}
                     </Button>
                   </form>
                 </Form>
@@ -246,27 +241,30 @@ export default function AuthPage() {
         </Card>
       </div>
       
-      {/* Right panel - Hero section */}
-      <div className="hidden md:flex flex-col items-center justify-center bg-gradient-to-br from-primary to-secondary text-white p-8">
-        <div className="max-w-lg mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-6">Рассчитайте стоимость вашего дома</h2>
-          <p className="text-lg mb-8">
-            Простой и удобный сервис для расчёта строительных материалов и стоимости дома.
-            Регистрация позволит вам сохранять результаты расчетов и отслеживать изменения.
-          </p>
-          <div className="flex justify-center gap-4">
-            <div className="bg-white/20 p-4 rounded-lg backdrop-blur-sm">
-              <div className="text-4xl font-bold mb-2">100+</div>
-              <div className="text-sm">Видов материалов</div>
-            </div>
-            <div className="bg-white/20 p-4 rounded-lg backdrop-blur-sm">
-              <div className="text-4xl font-bold mb-2">5000+</div>
-              <div className="text-sm">Довольных клиентов</div>
-            </div>
-            <div className="bg-white/20 p-4 rounded-lg backdrop-blur-sm">
-              <div className="text-4xl font-bold mb-2">99%</div>
-              <div className="text-sm">Точность расчетов</div>
-            </div>
+      <div className="w-full md:w-1/2 bg-gradient-to-br from-primary/90 to-primary/60 text-white rounded-lg p-8 flex flex-col justify-center">
+        <h2 className="text-3xl font-bold mb-6">{t("auth.hero.title")}</h2>
+        <p className="text-lg mb-8">{t("auth.hero.description")}</p>
+        <div className="space-y-4">
+          <div className="flex items-start">
+            <svg className="w-6 h-6 mr-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            <span>{t("auth.hero.benefit1")}</span>
+          </div>
+          <div className="flex items-start">
+            <svg className="w-6 h-6 mr-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            <span>{t("auth.hero.benefit2")}</span>
+          </div>
+          <div className="flex items-start">
+            <svg className="w-6 h-6 mr-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            <span>{t("auth.hero.benefit3")}</span>
           </div>
         </div>
       </div>

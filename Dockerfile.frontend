@@ -1,0 +1,19 @@
+FROM node:18
+
+WORKDIR /app
+
+# Копируем package.json для установки зависимостей
+COPY package.json package-lock.json ./
+RUN npm install
+
+# Копируем файлы клиентского приложения
+COPY client ./client
+COPY shared ./shared
+COPY vite.client.config.js ./
+COPY tailwind.config.ts ./
+COPY postcss.config.js ./
+
+EXPOSE 3000
+
+# Запускаем клиентский Vite-сервер
+CMD ["npx", "vite", "-c", "vite.client.config.js", "--host", "0.0.0.0"] 

@@ -1,72 +1,57 @@
-import { db } from "@db";
-import { users, calculations, User, Calculation, insertUserSchema } from "@shared/schema";
-import { eq } from "drizzle-orm";
-import connectPg from "connect-pg-simple";
+import { users, type User, type InsertUser } from "@shared/schema";
 import session from "express-session";
-import { pool } from "@db";
+import createMemoryStore from "memorystore";
 
-// Create session store
-const PostgresSessionStore = connectPg(session);
+const MemoryStore = createMemoryStore(session);
 
+// modify the interface with any CRUD methods
+// you might need
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
-  getUserByEmail(email: string): Promise<User | undefined>;
-  createUser(userData: { name: string, lastname: string, email: string, password: string }): Promise<User>;
-  getCalculations(userId: number): Promise<Calculation[]>;
-  getCalculation(id: number): Promise<Calculation | undefined>;
-  getLatestCalculation(userId: number): Promise<Calculation | undefined>;
-  createCalculation(data: any): Promise<Calculation>;
-  sessionStore: session.Store;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, data: Partial<User>): Promise<User | undefined>;
+  sessionStore: session.SessionStore;
 }
 
-class DatabaseStorage implements IStorage {
-  sessionStore: session.Store;
+export class MemStorage implements IStorage {
+  private users: Map<number, User>;
+  currentId: number;
+  sessionStore: session.SessionStore;
 
   constructor() {
-    this.sessionStore = new PostgresSessionStore({
-      pool,
-      createTableIfMissing: true,
+    this.users = new Map();
+    this.currentId = 1;
+    this.sessionStore = new MemoryStore({
+      checkPeriod: 86400000, // prune expired entries every 24h
     });
   }
 
   async getUser(id: number): Promise<User | undefined> {
-    const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
-    return result[0];
+    return this.users.get(id);
   }
 
-  async getUserByEmail(email: string): Promise<User | undefined> {
-    const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
-    return result[0];
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(
+      (user) => user.username === username,
+    );
   }
 
-  async createUser(userData: { name: string, lastname: string, email: string, password: string }): Promise<User> {
-    const [user] = await db.insert(users).values(userData).returning();
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const id = this.currentId++;
+    const user: User = { ...insertUser, id };
+    this.users.set(id, user);
     return user;
   }
 
-  async getCalculations(userId: number): Promise<Calculation[]> {
-    return await db.select().from(calculations).where(eq(calculations.userId, userId));
-  }
-
-  async getCalculation(id: number): Promise<Calculation | undefined> {
-    const result = await db.select().from(calculations).where(eq(calculations.id, id)).limit(1);
-    return result[0];
-  }
-
-  async getLatestCalculation(userId: number): Promise<Calculation | undefined> {
-    const result = await db
-      .select()
-      .from(calculations)
-      .where(eq(calculations.userId, userId))
-      .orderBy(calculations.createdAt)
-      .limit(1);
-    return result[0];
-  }
-
-  async createCalculation(data: any): Promise<Calculation> {
-    const [calculation] = await db.insert(calculations).values(data).returning();
-    return calculation;
+  async updateUser(id: number, data: Partial<User>): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (!user) return undefined;
+    
+    const updatedUser: User = { ...user, ...data };
+    this.users.set(id, updatedUser);
+    return updatedUser;
   }
 }
 
-export const storage = new DatabaseStorage();
+export const storage = new MemStorage();

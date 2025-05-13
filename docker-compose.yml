@@ -1,33 +1,61 @@
 services:
-  app:
+  frontend:
     build:
       context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./client:/app/client
+      - ./shared:/app/shared
+      - ./vite.client.config.js:/app/vite.client.config.js
+      - ./tailwind.config.ts:/app/tailwind.config.ts
+      - ./postcss.config.js:/app/postcss.config.js
+      - /app/node_modules
+    depends_on:
+      - backend
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:8321
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.housecraft.rule=Host(`housecraft.snaart.com`)"
+      - "traefik.http.routers.housecraft.entrypoints=websecure"
+      - "traefik.http.routers.housecraft.tls.certresolver=myresolver"
+      - "traefik.http.routers.housecraft.priority=10"
+    networks:
+      - traefik_network
+    expose:
+      - "80"
+
+  backend:
+    build:
+      context: ./backend
       dockerfile: Dockerfile
     ports:
-      - "5001:5000"
+      - "8321:8321"
+    volumes:
+      - ./backend:/app
     depends_on:
       - db
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5433/construction_calc
-      - NODE_ENV=development
-      - SESSION_SECRET=your_secret_key_here
-    volumes:
-      - .:/app:z           # Добавьте :z для SELinux
-      - /app/node_modules  # Для анонимного тома :z не нужен
-    command: npm run dev
+      - DATABASE_URL=postgresql://postgres:postgres@db:5438/houseapp
+      - SECRET_KEY=your-secret-key-here
 
   db:
     image: postgres:14
-    restart: always
+    ports:
+      - "5438:5432"
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=construction_calc
-    ports:
-      - "5433:5432"
+      - POSTGRES_DB=houseapp
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./docker-init:/docker-entrypoint-initdb.d:z  # Добавьте :z для SELinux
 
 volumes:
   postgres_data:
+
+networks:
+  traefik_network:
+    external: true

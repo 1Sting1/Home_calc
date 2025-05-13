@@ -1,18 +1,17 @@
-FROM node:20-slim
+FROM node:18
 
 WORKDIR /app
 
-# Копируем файлы зависимостей
-COPY package*.json ./
+# Копируем только необходимые файлы для клиентской части
+COPY package.json package-lock.json ./
+COPY client ./client
+COPY shared ./shared
+COPY vite.client.config.js ./
 
 # Устанавливаем зависимости
-RUN npm install
+RUN npm install --production=false
 
-# Копируем исходный код
-COPY . .
-
-# Порт, который будет открыт наружу
 EXPOSE 3000
 
-# Команда для запуска приложения
-CMD ["npm", "run", "dev"]
+# Запускаем клиентский Vite сервер
+CMD ["npx", "vite", "-c", "vite.client.config.js", "--host", "0.0.0.0"] 

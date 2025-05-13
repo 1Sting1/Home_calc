@@ -1,116 +1,160 @@
-import { createContext, ReactNode, useContext, useState, useEffect } from "react";
+import { createContext, ReactNode, useContext, useEffect } from "react";
+import { useLocation } from "wouter";
 import {
   useQuery,
   useMutation,
   UseMutationResult,
 } from "@tanstack/react-query";
-import { User, insertUserSchema } from "@shared/schema";
+import { insertUserSchema, User as SelectUser, InsertUser } from "@shared/schema";
 import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useLocation } from "wouter";
 
 type AuthContextType = {
-  user: User | null;
+  user: SelectUser | null;
   isLoading: boolean;
   error: Error | null;
-  loginMutation: UseMutationResult<User, Error, LoginData>;
+  loginMutation: UseMutationResult<SelectUser, Error, LoginData>;
   logoutMutation: UseMutationResult<void, Error, void>;
-  registerMutation: UseMutationResult<User, Error, RegisterData>;
+  registerMutation: UseMutationResult<SelectUser, Error, InsertUser>;
 };
 
-type LoginData = {
-  email: string;
-  password: string;
-};
-
-type RegisterData = {
-  name: string;
-  lastname: string;
-  email: string;
-  password: string;
-};
+type LoginData = Pick<InsertUser, "username" | "password">;
 
 export const AuthContext = createContext<AuthContextType | null>(null);
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
-  const [, navigate] = useLocation();
-  
-  // Создаем локальное состояние для пользователя для более быстрой реакции UI
-  const [localUser, setLocalUser] = useState<User | null>(null);
-  
+  const [location, navigate] = useLocation();
   const {
     data: user,
     error,
     isLoading,
     refetch,
-  } = useQuery<User | undefined, Error>({
+  } = useQuery<SelectUser | null, Error>({
     queryKey: ["/api/user"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
+    queryFn: async () => {
+      try {
+        const res = await fetch('/api/user', {
+          credentials: 'include'
+        });
+        
+        if (res.status === 401) {
+          return null;
+        }
+        
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(text || res.statusText);
+        }
+        
+        return await res.json();
+      } catch (error) {
+        console.error('User fetch error:', error);
+        return null;
+      }
+    },
   });
-  
-  // Синхронизируем локальное состояние с данными из запроса
+
+  // Redirect if on protected page but not logged in
   useEffect(() => {
-    setLocalUser(user ?? null);
-  }, [user]);
+    if (!isLoading && !user && location === "/profile") {
+      navigate("/auth");
+    }
+  }, [user, isLoading, location, navigate]);
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
-      const res = await apiRequest("POST", "/api/login", credentials);
-      return await res.json();
+      try {
+        // Create FormData to match OAuth2 password flow
+        const formData = new FormData();
+        formData.append('username', credentials.username);
+        formData.append('password', credentials.password);
+        
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          body: formData,
+          credentials: 'include'
+        });
+        
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(text || res.statusText);
+        }
+        
+        const tokenData = await res.json();
+        return tokenData;
+      } catch (error) {
+        console.error('Login error:', error);
+        throw error;
+      }
     },
-    onSuccess: (user: User) => {
-      // Немедленно обновляем локальное состояние для быстрой реакции UI
-      setLocalUser(user);
+    onSuccess: async () => {
+      // Refetch user data directly
+      await refetch();
       
-      // Затем обновляем кэш и запрашиваем свежие данные
-      queryClient.setQueryData(["/api/user"], user);
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      
-      // Сообщаем об успешном входе
       toast({
-        title: "Вход выполнен",
-        description: "Вы успешно вошли в аккаунт.",
+        title: "Login successful",
+        description: "You have been logged in successfully.",
       });
       
-      // Перенаправляем на главную
-      navigate("/");
+      // Navigate to profile page
+      navigate("/profile");
     },
     onError: (error: Error) => {
       toast({
-        title: "Ошибка входа",
-        description: error.message || "Пароль или Логин не верен",
+        title: "Login failed",
+        description: error.message,
         variant: "destructive",
       });
     },
   });
 
   const registerMutation = useMutation({
-    mutationFn: async (credentials: RegisterData) => {
-      const res = await apiRequest("POST", "/api/register", credentials);
-      return await res.json();
+    mutationFn: async (credentials: InsertUser) => {
+      try {
+        // For registration, convert to email format
+        const payload = {
+          email: credentials.username, // Use username as email
+          name: credentials.name,
+          lastname: credentials.lastname,
+          password: credentials.password
+        };
+        
+        const res = await fetch('/api/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload),
+          credentials: 'include'
+        });
+        
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(text || res.statusText);
+        }
+        
+        return await res.json();
+      } catch (error) {
+        console.error('Registration error:', error);
+        throw error;
+      }
     },
-    onSuccess: (user: User) => {
-      // Немедленно обновляем локальное состояние для быстрой реакции UI
-      setLocalUser(user);
+    onSuccess: async (userData) => {
+      // Refetch user data directly after registration
+      await refetch();
       
-      // Затем обновляем кэш и запрашиваем свежие данные
-      queryClient.setQueryData(["/api/user"], user);
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      
-      // Сообщаем об успешной регистрации
       toast({
-        title: "Регистрация успешна",
-        description: "Ваш аккаунт успешно создан.",
+        title: "Registration successful",
+        description: "Your account has been created successfully.",
       });
       
-      // Перенаправляем на главную
-      navigate("/");
+      // Navigate to profile page
+      navigate("/profile");
     },
     onError: (error: Error) => {
       toast({
-        title: "Ошибка регистрации",
-        description: error.message || "Не удалось зарегистрироваться",
+        title: "Registration failed",
+        description: error.message,
         variant: "destructive",
       });
     },
@@ -118,32 +162,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", "/api/logout");
-    },
-    onSuccess: () => {
-      // Немедленно обновляем локальное состояние для быстрой реакции UI
-      setLocalUser(null);
-      
-      // Сбрасываем пользователя и все связанные данные
-      queryClient.setQueryData(["/api/user"], null);
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      
-      // Дополнительно очищаем кэш расчетов
-      queryClient.removeQueries({ queryKey: ["/api/calculations"] });
-      queryClient.removeQueries({ queryKey: ["/api/calculations/latest"] });
-      
-      // Сообщаем об успешном выходе
-      toast({
-        title: "Выход из системы",
-        description: "Вы успешно вышли из аккаунта.",
+      const res = await fetch('/api/logout', {
+        method: 'POST',
+        credentials: 'include'
       });
       
-      // Перенаправляем на главную
-      navigate("/");
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || res.statusText);
+      }
+    },
+    onSuccess: () => {
+      // Explicitly set user to null for immediate UI update
+      queryClient.setQueryData(["/api/user"], null);
+      
+      toast({
+        title: "Logout successful",
+        description: "You have been logged out successfully.",
+      });
+      
+      // Navigate to auth page
+      navigate("/auth");
     },
     onError: (error: Error) => {
       toast({
-        title: "Ошибка выхода",
+        title: "Logout failed",
         description: error.message,
         variant: "destructive",
       });
@@ -153,8 +196,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider
       value={{
-        // Используем локальное состояние для более быстрой реакции UI
-        user: localUser,
+        user: user ?? null,
         isLoading,
         error,
         loginMutation,

@@ -1,0 +1,238 @@
+{
+  "materials": {
+    "brick": "Кирпич",
+    "ceramicBrick": "Керамический кирпич",
+    "clinkerBrick": "Клинкерный кирпич",
+    "silicateBrick": "Силикатный кирпич",
+    "reinforcedConcrete": "Железобетон",
+    "concrete": "Бетон",
+    "monolithicConcrete": "Монолитный бетон",
+    "porousConcrete": "Пористый бетон",
+    "wood": "Дерево",
+    "timber": "Деревянный брус",
+    "log": "Оцилиндрованное бревно",
+    "glulam": "Клееный брус",
+    "clb": "CLT-панель (поперечно-клееная древесина)",
+    "frameWooden": "Деревянно-каркасная конструкция",
+    "gasblock": "Газобетонные блоки",
+    "foamblock": "Пенобетонные блоки",
+    "keramsitBlock": "Керамзитобетонные блоки",
+    "cinderBlock": "Шлакоблоки",
+    "arboliteBlock": "Арболитовые блоки",
+    "mineral": "Минеральная вата",
+    "foam": "Пенопласт",
+    "eco": "Экологичный утеплитель",
+    "extrudedPolystyrene": "Экструдированный пенополистирол (XPS)",
+    "stoneWool": "Каменная вата",
+    "glassWool": "Стекловата",
+    "polyurethane": "Пенополиуретан (ППУ)",
+    "cellulose": "Целлюлозный утеплитель",
+    "siding": "Сайдинг",
+    "boards": "Доска обрезная",
+    "metal": "Металл",
+    "shingles": "Битумная черепица",
+    "metalTile": "Металлочерепица",
+    "metalSheets": "Профнастил",
+    "ceramicTile": "Керамическая черепица",
+    "bitumenTile": "Гибкая черепица",
+    "compositeShingles": "Композитная черепица",
+    "slate": "Шифер",
+    "woodenShingles": "Деревянная дранка",
+    "greenRoof": "Зеленая кровля",
+    "polycarbonate": "Сотовый поликарбонат",
+    "plaster": "Штукатурка",
+    "decorativePlaster": "Декоративная штукатурка",
+    "compositePanels": "Композитные панели",
+    "naturalStone": "Натуральный камень",
+    "facadePanels": "Фасадные панели",
+    "blockHouse": "Блок-хаус",
+    "woodenPanels": "Деревянные панели",
+    "thermoWood": "Термодревесина",
+    "imitationTimber": "Имитация бруса",
+    "rubble": "Бутовый камень",
+    "stripFoundation": "Ленточный фундамент",
+    "pileFoundation": "Свайный фундамент",
+    "monolithicSlab": "Монолитная плита",
+    "pileGrillage": "Свайно-ростверковый фундамент",
+    "screwPile": "Фундамент на винтовых сваях",
+    "concretePillars": "Фундамент на бетонных столбах",
+    "stone": "Камень",
+    "floatingFoundation": "Плавающий фундамент"
+  },
+
+  "calculation": {
+    "title": "Расчёт строительных материалов",
+    "selectHouseType": "Выберите тип дома",
+    "selectMaterials": "Выберите строительные материалы",
+    "calculate": "Рассчитать",
+    "results": "Результаты расчёта",
+
+    "houseType": {
+      "title": "Тип дома",
+      "brick": "Кирпичный дом",
+      "concrete": "Бетонный дом",
+      "wooden": "Деревянный дом",
+      "blocks": "Блочный дом"
+    },
+
+    "foundation": {
+      "title": "Фундамент",
+      "width": "Ширина (м)",
+      "depth": "Глубина (м)",
+      "length": "Длина (м)",
+      "type": "Тип фундамента",
+      "selectType": "Выберите тип фундамента",
+      "finishing": "Отделка фундамента",
+      "selectFinishing": "Выберите отделку фундамента",
+      "basement": "Подвальное помещение",
+      "basementFloor": "Пол в подвале",
+      "floorMaterial": "Материал пола",
+      "selectFloorMaterial": "Выберите материал для пола",
+      "wallMaterial": "Материал стен подвала",
+      "selectWallMaterial": "Выберите материал для стен"
+    },
+
+    "walls": {
+      "title": "Стены",
+      "wall": "Стена",
+      "width": "Толщина (см)",
+      "length": "Длина (м)",
+      "height": "Высота (м)",
+      "material": "Материал стены",
+      "selectMaterial": "Выберите материал",
+      "mortar": "Строительный раствор",
+      "insulation": "Утеплитель",
+      "selectInsulation": "Выберите утеплитель",
+      "finishing": "Внешняя отделка",
+      "selectFinishing": "Выберите материал отделки",
+      "openings": "Проёмы",
+      "addOpening": "Добавить проём",
+      "openingType": "Тип проёма",
+      "selectOpeningType": "Выберите тип проёма",
+      "door": "Дверной проём",
+      "window": "Оконный проём",
+      "noOpenings": "Нет проёмов. Нажмите кнопку выше, чтобы добавить.",
+      "addWall": "Добавить стену",
+      "noWalls": "Стены не заданы. Добавьте стены для расчёта.",
+      "addFirstWall": "Добавить первую стену"
+    },
+
+    "roof": {
+      "title": "Крыша",
+      "types": "Тип конструкции крыши",
+      "metalFrame": "Металлокаркасная",
+      "wooden": "Деревянная стропильная",
+      "reinforcedConcrete": "Железобетонная",
+      "combined": "Комбинированная",
+      "truss": "Ферменная конструкция",
+      "material": "Кровельный материал",
+      "selectMaterial": "Выберите кровельный материал",
+      "length": "Длина (м)",
+      "width": "Ширина (м)",
+      "area": "Площадь кровли"
+    },
+
+    "results": {
+      "title": "Результаты расчёта",
+      "material": "Материал",
+      "quantity": "Количество",
+      "unit": "Единица измерения",
+      "totalArea": "Общая площадь",
+      "noResults": "Нет результатов. Заполните все поля и нажмите кнопку \"Рассчитать\".",
+      "m2": "м²",
+      "m3": "м³",
+      "kg": "кг",
+      "piece": "шт."
+    },
+
+    "units": {
+      "pcs": "шт",
+      "m3": "м³",
+      "m2": "м²", 
+      "kg": "кг",
+      "foundation": "тип фундамента",
+      "element": "элемент",
+      "basement-walls": "материал стен подвала",
+      "basement-floor": "материал пола подвала",
+      "wall-1": "материал стены 1",
+      "wall-2": "материал стены 2",
+      "wall-3": "материал стены 3",
+      "wall-4": "материал стены 4",
+      "wall-5": "материал стены 5",
+      "wall-6": "материал стены 6",
+      "insulation-wall-1": "утеплитель стены 1",
+      "insulation-wall-2": "утеплитель стены 2",
+      "insulation-wall-3": "утеплитель стены 3",
+      "insulation-wall-4": "утеплитель стены 4",
+      "insulation-wall-5": "утеплитель стены 5",
+      "insulation-wall-6": "утеплитель стены 6",
+      "finishing-wall-1": "отделка стены 1",
+      "finishing-wall-2": "отделка стены 2",
+      "finishing-wall-3": "отделка стены 3",
+      "finishing-wall-4": "отделка стены 4",
+      "finishing-wall-5": "отделка стены 5",
+      "finishing-wall-6": "отделка стены 6",
+      "opening-1-1": "проём 1 в стене 1",
+      "opening-1-2": "проём 2 в стене 1",
+      "opening-2-1": "проём 1 в стене 2",
+      "opening-2-2": "проём 2 в стене 2",
+      "opening-3-1": "проём 1 в стене 3",
+      "opening-3-2": "проём 2 в стене 3",
+      "opening-4-1": "проём 1 в стене 4",
+      "opening-4-2": "проём 2 в стене 4",
+      "roof-type": "тип крыши",
+      "roof-material": "материал кровли",
+      "door-opening": "дверной проём",
+      "window-opening": "оконный проём"
+    },
+
+    "translation": {
+      "languages": {
+        "kg": "кг",
+        "piece": "шт."
+      }
+    }
+  },
+
+  "contacts": {
+    "title": "Контакты",
+    "form": {
+      "title": "Связаться с нами",
+      "name": "Ваше имя",
+      "email": "Email",
+      "subject": "Тема",
+      "message": "Сообщение",
+      "submit": "Отправить"
+    },
+    "companyInfo": {
+      "title": "Информация о компании",
+      "address": "Адрес",
+      "addressValue": "ул. Лермонтова, 126, Иркутск, Россия",
+      "phone": "Телефон",
+      "email": "Email",
+      "workingHours": "Рабочие часы",
+      "workingHoursValue": "Пн-Пт: 9:00 - 18:00",
+      "socialMedia": "Социальные сети"
+    },
+    "formSuccess": "Сообщение отправлено",
+    "formSuccessDescription": "Мы свяжемся с вами в ближайшее время"
+  },
+
+  "footer": {
+    "about": {
+      "title": "О компании",
+      "description": "HouseCraft – простой и точный калькулятор для планирования строительства дома вашей мечты."
+    },
+    "contacts": {
+      "title": "Контакты",
+      "address": "ул. Лермонтова, 126, Иркутск"
+    },
+    "docs": {
+      "title": "Документы",
+      "userAgreement": "Пользовательское соглашение",
+      "privacyPolicy": "Политика конфиденциальности",
+      "termsOfUse": "Условия использования"
+    },
+    "copyright": "Все права защищены"
+  }
+} 
