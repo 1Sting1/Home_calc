@@ -27,9 +27,14 @@ export default defineConfig({
     host: '0.0.0.0',
     proxy: {
       '/api': {
-        target: 'https://api.housecraft.snaart.com',
+        target: 'http://backend:8000',
         changeOrigin: true,
       }
-    }
+    },
+    allowedHosts: [
+      'localhost',
+      '127.0.0.1',
+      'housecraft.snaart.com'
+    ]
   }
-}); 
+});
